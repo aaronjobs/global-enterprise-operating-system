@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEOS.Intel.LuMamba — Signal-to-State Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #07090f;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+
+  .canvas {
+    width: 960px;
+    background: #0d1117;
+    border: 1px solid #1e2a3a;
+    border-radius: 20px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Background grid */
+  .canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56,139,253,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,139,253,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+
+  /* Glow orbs */
+  .glow-tl {
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(88,86,214,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .glow-br {
+    position: absolute;
+    bottom: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,210,255,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 36px;
+    position: relative;
+    z-index: 1;
+  }
+  .geos-badge {
+    background: linear-gradient(135deg, #1c2a3d, #162032);
+    border: 1px solid #2a4060;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #5898d6;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-text h1 {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #a8c0e8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+  }
+  .header-text p {
+    font-size: 12px;
+    color: #5d7a9e;
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .version-pill {
+    margin-left: auto;
+    background: rgba(88,152,214,0.1);
+    border: 1px solid rgba(88,152,214,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #5898d6;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Architecture layout */
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr 220px 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+    align-items: center;
+  }
+
+  /* Left column — inputs */
+  .inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-right: 8px;
+  }
+
+  /* Right column — outputs */
+  .outputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-left: 8px;
+  }
+
+  /* Signal block */
+  .signal-block {
+    background: linear-gradient(135deg, #111922, #0e1720);
+    border: 1px solid #1e3048;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+  .signal-block:hover { border-color: #3a6090; }
+  .signal-block.active {
+    border-color: #2a5080;
+    background: linear-gradient(135deg, #121f2e, #0f1a28);
+  }
+  .signal-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+  .icon-blue { background: rgba(56,139,253,0.12); }
+  .icon-purple { background: rgba(130,80,255,0.12); }
+  .icon-teal { background: rgba(0,210,200,0.12); }
+  .icon-amber { background: rgba(255,180,0,0.10); }
+  .icon-rose { background: rgba(255,80,100,0.10); }
+  .icon-green { background: rgba(60,200,120,0.12); }
+
+  .signal-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #c8d8ea;
+    line-height: 1.2;
+  }
+  .signal-sub {
+    font-size: 10px;
+    color: #4a6580;
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Center — LuMamba core */
+  .lumamba-core {
+    grid-column: 2;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .core-box {
+    width: 220px;
+    background: linear-gradient(160deg, #141c2e 0%, #0f1622 50%, #0c1220 100%);
+    border: 1.5px solid #2a4a7a;
+    border-radius: 18px;
+    padding: 22px 16px;
+    text-align: center;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(56,139,253,0.08),
+      0 0 40px rgba(56,100,200,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  /* Pulse ring */
+  .core-box::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 24px;
+    border: 1px solid rgba(56,139,253,0.15);
+    animation: pulse-ring 3s ease-in-out infinite;
+  }
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.01); }
+  }
+
+  .core-logo {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, #1e3a6e, #142a54);
+    border: 1px solid rgba(88,152,214,0.4);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 22px;
+    box-shadow: 0 0 20px rgba(56,100,200,0.25);
+  }
+  .core-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+  }
+  .core-subtitle {
+    font-size: 10px;
+    color: #5898d6;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .core-divider {
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #2a4a6a, transparent);
+    margin: 14px auto;
+  }
+
+  /* Properties badges */
+  .props {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+  .prop-tag {
+    background: rgba(56,139,253,0.07);
+    border: 1px solid rgba(56,139,253,0.18);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 10px;
+    color: #88aed8;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .prop-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-blue { background: #388bfd; box-shadow: 0 0 4px #388bfd; }
+  .dot-purple { background: #a371f7; box-shadow: 0 0 4px #a371f7; }
+  .dot-teal { background: #39d353; box-shadow: 0 0 4px #39d353; }
+
+  /* Arrow tracks */
+  .arrow-track {
+    height: 2px;
+    position: relative;
+    margin: 2px 0;
+  }
+
+  /* SVG arrows between blocks */
+  .arrows-svg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Connector row */
+  .connector-row {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 32px;
+    gap: 12px;
+    position: relative;
+  }
+  .connector-row::before {
+    content: '';
+    position: absolute;
+    top: 28px;
+    left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #1e3050 20%, #2a4a7a 50%, #1e3050 80%, transparent);
+  }
+
+  .integration-block {
+    flex: 1;
+    background: linear-gradient(135deg, #0e1720, #0b1318);
+    border: 1px solid #1e3040;
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    position: relative;
+  }
+  .integration-block:hover {
+    border-color: #2a5070;
+    background: linear-gradient(135deg, #111e2a, #0e1820);
+  }
+  .int-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 18px;
+  }
+  .int-connector-dot {
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    border: 2px solid #0d1117;
+  }
+  .dot-reg { background: #a371f7; box-shadow: 0 0 6px #a371f7; }
+  .dot-wf  { background: #388bfd; box-shadow: 0 0 6px #388bfd; }
+  .dot-sos { background: #39d353; box-shadow: 0 0 6px #39d353; }
+
+  .int-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #c8d8ea;
+    margin-bottom: 3px;
+  }
+  .int-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #3d5a7a;
+    letter-spacing: 0.06em;
+  }
+  .int-desc {
+    font-size: 10px;
+    color: #4a6580;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .int-tag {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+  .tag-purple { background: rgba(163,113,247,0.12); color: #a371f7; border: 1px solid rgba(163,113,247,0.25); }
+  .tag-blue   { background: rgba(56,139,253,0.10); color: #388bfd; border: 1px solid rgba(56,139,253,0.25); }
+  .tag-green  { background: rgba(57,211,83,0.10);  color: #39d353; border: 1px solid rgba(57,211,83,0.22);  }
+
+  /* Full-width flow SVG */
+  .flow-svg-wrapper {
+    position: relative;
+    height: 60px;
+    grid-column: 1 / -1;
+    margin-top: -8px;
+    margin-bottom: -8px;
+  }
+
+  /* Footer */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #141e2e;
+    position: relative;
+    z-index: 1;
+  }
+  .footer-left {
+    font-size: 10px;
+    color: #2e4060;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .status-indicators {
+    display: flex;
+    gap: 16px;
+  }
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #3a5070;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .s-green { background: #39d353; animation-delay: 0s; }
+  .s-blue  { background: #388bfd; animation-delay: 0.6s; }
+  .s-purple{ background: #a371f7; animation-delay: 1.2s; }
+
+  /* ARCH main grid wrapper */
+  .arch-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 220px 1fr;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Left/right columns */
+  .col-left { padding-right: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .col-right { padding-left: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .col-center { display: flex; flex-direction: column; align-items: center; }
+
+  /* Flow arrows via SVG overlaid on grid */
+  .arch-outer {
+    position: relative;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="glow-tl"></div>
+  <div class="glow-br"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="geos-badge">GEOS · Intel</div>
+    <div class="header-text">
+      <h1>LuMamba Signal-to-State Engine</h1>
+      <p>GEOS.Intel.LuMamba · topology-invariant · long-context · low-FLOPs</p>
+    </div>
+    <div class="version-pill">v2.4 · stable</div>
+  </div>
+
+  <!-- Main Architecture Grid -->
+  <div class="arch-outer">
+    <div class="arch-wrapper" id="archGrid">
+
+      <!-- LEFT COLUMN: Signal Inputs -->
+      <div class="col-left">
+
+        <div class="signal-block active">
+          <div class="signal-icon icon-blue">🎙️</div>
+          <div>
+            <div class="signal-label">Whisperflow</div>
+            <div class="signal-sub">AUDIO · TRANSCRIPT · EVENT</div>
+          </div>
+        </div>
+
+        <div class="signal-block">
+          <div class="signal-icon icon-purple">📡</div>
+          <div>
+            <div class="signal-label">Telemetry Stream</div>
+            <div class="signal-sub">METRICS · ALERTS · LOGS</div>
+          </div>
+        </div>
+
+        <div class="signal-block">
+          <div class="signal-icon icon-teal">🔗</div>
+          <div>
+            <div class="signal-label">Graph Topology Events</div>
+            <div class="signal-sub">NODE · EDGE · RELATION</div>
+          </div>
+        </div>
+
+        <div class="signal-block">
+          <div class="signal-icon icon-amber">📨</div>
+          <div>
+            <div class="signal-label">Enterprise Context</div>
+            <div class="signal-sub">DOCS · TICKETS · CRM</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CENTER COLUMN: LuMamba Core -->
+      <div class="col-center">
+        <div class="core-box">
+          <div class="core-logo">🧠</div>
+          <div class="core-title">LuMamba</div>
+          <div class="core-subtitle">Signal-to-State Engine</div>
+          <div class="core-divider"></div>
+          <div class="props">
+            <div class="prop-tag">
+              <span class="prop-dot dot-blue"></span>
+              topology-invariant
+            </div>
+            <div class="prop-tag">
+              <span class="prop-dot dot-purple"></span>
+              long-context SSM
+            </div>
+            <div class="prop-tag">
+              <span class="prop-dot dot-teal"></span>
+              low-FLOPs inference
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: State Outputs -->
+      <div class="col-right">
+
+        <div class="signal-block active">
+          <div class="signal-icon icon-green">📦</div>
+          <div>
+            <div class="signal-label">State Object Service</div>
+            <div class="signal-sub">ENTITY · SNAPSHOT · DELTA</div>
+          </div>
+        </div>
+
+        <div class="signal-block">
+          <div class="signal-icon icon-blue">🔮</div>
+          <div>
+            <div class="signal-label">Agent Decision Bus</div>
+            <div class="signal-sub">INTENT · ACTION · PRIORITY</div>
+          </div>
+        </div>
+
+        <div class="signal-block">
+          <div class="signal-icon icon-amber">📊</div>
+          <div>
+            <div class="signal-label">Analytics Sink</div>
+            <div class="signal-sub">KPIS · TREND · FORECAST</div>
+          </div>
+        </div>
+
+        <div class="signal-block">
+          <div class="signal-icon icon-rose">🔔</div>
+          <div>
+            <div class="signal-label">Alert &amp; Escalation</div>
+            <div class="signal-sub">RISK · DRIFT · ANOMALY</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /arch-wrapper -->
+
+    <!-- SVG arrows overlaid -->
+    <svg class="arrows-svg" viewBox="0 0 960 280" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#388bfd" opacity="0.7"/>
+        </marker>
+        <marker id="ah-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#39d353" opacity="0.7"/>
+        </marker>
+        <linearGradient id="lgL" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#388bfd" stop-opacity="0.0"/>
+          <stop offset="100%" stop-color="#388bfd" stop-opacity="0.55"/>
+        </linearGradient>
+        <linearGradient id="lgR" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#39d353" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#39d353" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Left arrows (inputs → core) -->
+      <!-- Whisperflow -->
+      <line x1="310" y1="48"  x2="368" y2="48"  stroke="url(#lgL)" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+      <!-- Telemetry -->
+      <line x1="310" y1="110" x2="368" y2="110" stroke="url(#lgL)" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+      <!-- Graph -->
+      <line x1="310" y1="172" x2="368" y2="172" stroke="url(#lgL)" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+      <!-- Enterprise -->
+      <line x1="310" y1="234" x2="368" y2="234" stroke="url(#lgL)" stroke-width="1.5" marker-end="url(#ah-blue)"/>
+
+      <!-- Right arrows (core → outputs) -->
+      <line x1="592" y1="48"  x2="648" y2="48"  stroke="url(#lgR)" stroke-width="1.5" marker-end="url(#ah-green)"/>
+      <line x1="592" y1="110" x2="648" y2="110" stroke="url(#lgR)" stroke-width="1.5" marker-end="url(#ah-green)"/>
+      <line x1="592" y1="172" x2="648" y2="172" stroke="url(#lgR)" stroke-width="1.5" marker-end="url(#ah-green)"/>
+      <line x1="592" y1="234" x2="648" y2="234" stroke="url(#lgR)" stroke-width="1.5" marker-end="url(#ah-green)"/>
+    </svg>
+
+  </div><!-- /arch-outer -->
+
+  <!-- Integration Layer -->
+  <div class="connector-row" style="position:relative; z-index:1; margin-top:32px;">
+
+    <div class="integration-block">
+      <div class="int-connector-dot dot-reg"></div>
+      <div class="int-icon" style="background:rgba(163,113,247,0.1);">🗄️</div>
+      <div class="int-name">Model Registry</div>
+      <div class="int-code">GEOS.Intel.ModelReg</div>
+      <div class="int-desc">Version-controlled model weights, adapter configs, and routing rules for LuMamba instances</div>
+      <span class="int-tag tag-purple">versioned · gated</span>
+    </div>
+
+    <div class="integration-block">
+      <div class="int-connector-dot dot-wf"></div>
+      <div class="int-icon" style="background:rgba(56,139,253,0.1);">🌊</div>
+      <div class="int-name">Whisperflow</div>
+      <div class="int-code">GEOS.Intel.Whisperflow</div>
+      <div class="int-desc">Real-time audio transcription and event streaming pipeline; primary signal ingestion channel</div>
+      <span class="int-tag tag-blue">streaming · real-time</span>
+    </div>
+
+    <div class="integration-block">
+      <div class="int-connector-dot dot-sos"></div>
+      <div class="int-icon" style="background:rgba(57,211,83,0.1);">🗂️</div>
+      <div class="int-name">State Object Service</div>
+      <div class="int-code">GEOS.Intel.SOS</div>
+      <div class="int-desc">Persistent entity snapshots and delta records; downstream consumers read structured world-state</div>
+      <span class="int-tag tag-green">persistent · queryable</span>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">GEOS Enterprise Agent Architecture · LiveSkillLabs · Microsoft Applied Skills</div>
+    <div class="status-indicators">
+      <div class="status-item"><div class="status-dot s-green"></div>SOS online</div>
+      <div class="status-item"><div class="status-dot s-blue"></div>Whisperflow active</div>
+      <div class="status-item"><div class="status-dot s-purple"></div>Registry synced</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
