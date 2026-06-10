@@ -1,0 +1,133 @@
+{
+  "version": "1.0.0",
+  "routing_table": [
+    {
+      "domain": "knowledge",
+      "intent_patterns": [
+        "define",
+        "explain",
+        "summarize",
+        "analyze"
+      ],
+      "primary_agent": "KnowledgeAgent",
+      "fallback_agent": "Claude5.Orchestrator",
+      "capabilities": [
+        "long_context_reasoning",
+        "semantic_extraction",
+        "structured_explanation"
+      ],
+      "escalation_policy": "auto"
+    },
+    {
+      "domain": "strategy",
+      "intent_patterns": [
+        "plan",
+        "design",
+        "roadmap",
+        "framework",
+        "evaluate options"
+      ],
+      "primary_agent": "StrategyAgent",
+      "fallback_agent": "Claude5.Orchestrator",
+      "capabilities": [
+        "scenario_analysis",
+        "tradeoff_reasoning",
+        "multi_step_planning"
+      ],
+      "escalation_policy": "orchestrator_review"
+    },
+    {
+      "domain": "execution",
+      "intent_patterns": [
+        "build",
+        "generate",
+        "execute",
+        "run",
+        "assemble"
+      ],
+      "primary_agent": "ExecutionAgent",
+      "fallback_agent": "WorkerPool",
+      "capabilities": [
+        "task_execution",
+        "workflow_assembly",
+        "artifact_generation"
+      ],
+      "escalation_policy": "strict"
+    },
+    {
+      "domain": "data",
+      "intent_patterns": [
+        "query",
+        "extract",
+        "transform",
+        "analyze data"
+      ],
+      "primary_agent": "DataAgent",
+      "fallback_agent": "Claude5.Orchestrator",
+      "capabilities": [
+        "sql_generation",
+        "etl_planning",
+        "data_validation"
+      ],
+      "escalation_policy": "auto"
+    },
+    {
+      "domain": "communication",
+      "intent_patterns": [
+        "write",
+        "draft",
+        "message",
+        "email",
+        "present"
+      ],
+      "primary_agent": "CommsAgent",
+      "fallback_agent": "Claude5.Orchestrator",
+      "capabilities": [
+        "tone_control",
+        "audience_adaptation",
+        "structured_output"
+      ],
+      "escalation_policy": "light"
+    },
+    {
+      "domain": "rcl",
+      "intent_patterns": [
+        "robotics",
+        "embodied",
+        "sensor",
+        "actuator",
+        "policy synthesis"
+      ],
+      "primary_agent": "RCLAgent",
+      "fallback_agent": "SafetyKernel",
+      "capabilities": [
+        "embodied_reasoning",
+        "policy_generation",
+        "safety_constraints"
+      ],
+      "escalation_policy": "safety_gate"
+    },
+    {
+      "domain": "policy",
+      "intent_patterns": [
+        "validate",
+        "check",
+        "approve",
+        "govern"
+      ],
+      "primary_agent": "PolicyAgent",
+      "fallback_agent": "Claude5.Constitutional",
+      "capabilities": [
+        "compliance_validation",
+        "risk_assessment",
+        "guardrail_enforcement"
+      ],
+      "escalation_policy": "mandatory"
+    }
+  ],
+  "default_route": {
+    "primary_agent": "Claude5.Orchestrator",
+    "reason": "No domain match",
+    "escalation_policy": "auto"
+  }
+}
