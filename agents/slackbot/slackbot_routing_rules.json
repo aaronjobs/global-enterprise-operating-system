@@ -1,0 +1,108 @@
+{
+  "agent_name": "SlackbotAgent",
+  "version": "1.0.0",
+  "domain": "conversational_interface",
+
+  "routing_rules": {
+    "direct_handling": [
+      {
+        "pattern": ["summarize", "tl;dr", "recap", "what happened"],
+        "task_type": "quick_action",
+        "target_agent": "ExecutionAgent",
+        "description": "Summaries and quick recaps are handled without invoking the orchestrator."
+      },
+      {
+        "pattern": ["rewrite", "improve", "clean up", "make this sound better"],
+        "task_type": "quick_action",
+        "target_agent": "CommsAgent",
+        "description": "Message rewrites and tone adjustments are routed to CommsAgent."
+      },
+      {
+        "pattern": ["extract action items", "what are the tasks", "next steps"],
+        "task_type": "quick_action",
+        "target_agent": "ExecutionAgent",
+        "description": "Action item extraction is handled directly by ExecutionAgent."
+      }
+    ],
+
+    "mission_triggers": [
+      {
+        "pattern": ["create workflow", "build workflow", "generate workflow"],
+        "task_type": "mission_initialization",
+        "target_agent": "Claude5.Orchestrator",
+        "description": "Workflow creation always triggers a full MissionSpec → TaskGraph pipeline."
+      },
+      {
+        "pattern": ["run analysis", "analyze", "deep dive", "full report"],
+        "task_type": "mission_initialization",
+        "target_agent": "Claude5.Orchestrator",
+        "description": "Analytical missions require orchestrator-level reasoning."
+      },
+      {
+        "pattern": ["onboarding", "pipeline", "campaign", "qbr", "forecast"],
+        "task_type": "scenario_trigger",
+        "target_agent": "Claude5.Orchestrator",
+        "description": "Scenario-based missions load scenario configs and initialize a TaskGraph."
+      }
+    ],
+
+    "agent_specific_routing": [
+      {
+        "pattern": ["lead", "deal", "follow up", "sales"],
+        "task_type": "sales_execution",
+        "target_agent": "SalesExecutionAgent",
+        "description": "Sales execution tasks route directly to the High-Execution Sales Agent."
+      },
+      {
+        "pattern": ["campaign", "segment", "persona", "marketing"],
+        "task_type": "marketing_task",
+        "target_agent": "CustomerMarketingAgent",
+        "description": "Marketing tasks route to the CustomerMarketingAgent."
+      },
+      {
+        "pattern": ["forecast", "quota", "territory", "revenue"],
+        "task_type": "sales_strategy",
+        "target_agent": "SalesStrategyAgent",
+        "description": "Strategic sales tasks route to the SalesStrategyAgent."
+      }
+    ],
+
+    "policy_routing": [
+      {
+        "pattern": ["approve", "validate", "is this compliant", "check policy"],
+        "task_type": "policy_validation",
+        "target_agent": "PolicyAgent",
+        "description": "Policy and compliance checks always route to PolicyAgent."
+      }
+    ],
+
+    "safety_routing": [
+      {
+        "pattern": ["deploy", "execute command", "run in production", "trigger robot"],
+        "task_type": "safety_gate",
+        "target_agent": "SafetyKernel",
+        "description": "High-risk or irreversible actions must pass through SafetyKernel."
+      }
+    ],
+
+    "fallback": {
+      "target_agent": "Claude5.Orchestrator",
+      "description": "If no rule matches, escalate to the orchestrator for interpretation."
+    }
+  },
+
+  "slack_event_routing": {
+    "message": "SlackbotAgent",
+    "app_mention": "SlackbotAgent",
+    "file_shared": "SlackbotAgent",
+    "shortcut": "SlackbotAgent",
+    "slash_command": "SlackbotAgent",
+    "modal_submission": "SlackbotAgent"
+  },
+
+  "metadata": {
+    "description": "Routing rules for SlackbotAgent, defining how Slack events and user messages map to GEOS agents and workflows.",
+    "author": "GEOS System Architecture",
+    "created": "2026-06-10"
+  }
+}
