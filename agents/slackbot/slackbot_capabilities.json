@@ -1,0 +1,87 @@
+{
+  "agent_name": "SlackbotAgent",
+  "version": "1.0.0",
+  "domain": "conversational_interface",
+
+  "capabilities": [
+    "intent_detection",
+    "message_classification",
+    "context_extraction",
+    "slot_filling",
+    "workflow_triggering",
+    "mission_initialization",
+    "structured_input_collection",
+    "file_ingestion",
+    "quick_action_execution",
+    "notification_dispatch",
+    "approval_request_handling",
+    "slack_event_handling",
+    "slack_modal_interactions",
+    "slack_shortcuts",
+    "slack_slash_commands",
+    "escalation_to_orchestrator",
+    "escalation_to_policy_agent",
+    "escalation_to_safety_kernel"
+  ],
+
+  "quick_actions": [
+    "summarize_thread",
+    "extract_action_items",
+    "rewrite_message",
+    "format_text",
+    "generate_quick_draft",
+    "convert_message_to_task"
+  ],
+
+  "workflow_triggers": [
+    "create_mission_from_message",
+    "create_mission_from_file",
+    "create_mission_from_thread",
+    "trigger_scenario_config",
+    "trigger_agent_specific_workflow"
+  ],
+
+  "inputs": [
+    "slack_messages",
+    "slack_threads",
+    "file_uploads",
+    "slash_commands",
+    "interactive_buttons",
+    "modal_submissions",
+    "user_mentions",
+    "channel_events"
+  ],
+
+  "outputs": [
+    "mission_spec_json",
+    "task_triggers",
+    "structured_context_payloads",
+    "notifications",
+    "summaries",
+    "rewrites",
+    "escalation_requests"
+  ],
+
+  "limitations": [
+    "cannot_generate_taskgraphs",
+    "cannot_perform_deep_reasoning",
+    "cannot_bypass_policy",
+    "cannot_execute_high_risk_actions",
+    "cannot_make_strategic_decisions"
+  ],
+
+  "escalation_targets": {
+    "reasoning_required": "Claude5.Orchestrator",
+    "policy_required": "PolicyAgent",
+    "safety_required": "SafetyKernel",
+    "execution_required": "ExecutionAgent",
+    "narrative_required": "CommsAgent",
+    "data_required": "DataAgent"
+  },
+
+  "metadata": {
+    "description": "SlackbotAgent is the GEOS conversational interface for Slack. It triggers missions, collects context, executes micro-tasks, and escalates complex workflows to the Orchestrator.",
+    "author": "GEOS System Architecture",
+    "created": "2026-06-10"
+  }
+}
