@@ -1,0 +1,197 @@
+{
+  "taskgraph_id": "tg_onboarding_001",
+  "mission_id": "mission_onboarding_2026_01",
+  "version": "1.0.0",
+  "timestamp": "2026-06-10T20:55:00Z",
+
+  "nodes": [
+    {
+      "task_id": "t1_intent_analysis",
+      "task_type": "analysis",
+      "description": "Analyze mission intent and extract core onboarding requirements.",
+      "agent": "KnowledgeAgent",
+      "inputs": {
+        "from_mission": ["intent.summary", "context.domain"],
+        "from_tasks": [],
+        "external": {}
+      },
+      "outputs": {
+        "expected": ["requirements_list"],
+        "format": "json"
+      },
+      "constraints": ["must align with engineering onboarding best practices"],
+      "status": "pending",
+      "metadata": {
+        "priority": "high",
+        "retry_limit": 2,
+        "timeout_seconds": 45
+      }
+    },
+    {
+      "task_id": "t2_workflow_design",
+      "task_type": "generation",
+      "description": "Generate a structured onboarding workflow with phases, tasks, and owners.",
+      "agent": "StrategyAgent",
+      "inputs": {
+        "from_mission": ["desired_outcome"],
+        "from_tasks": ["t1_intent_analysis"],
+        "external": {}
+      },
+      "outputs": {
+        "expected": ["workflow_structure"],
+        "format": "json"
+      },
+      "constraints": ["workflow must be modular and scalable"],
+      "status": "pending",
+      "metadata": {
+        "priority": "high",
+        "retry_limit": 3,
+        "timeout_seconds": 60
+      }
+    },
+    {
+      "task_id": "t3_ai_augmentation",
+      "task_type": "generation",
+      "description": "Identify opportunities where AI agents can augment onboarding tasks.",
+      "agent": "StrategyAgent",
+      "inputs": {
+        "from_mission": ["context.known_inputs"],
+        "from_tasks": ["t2_workflow_design"],
+        "external": {}
+      },
+      "outputs": {
+        "expected": ["ai_augmented_steps"],
+        "format": "json"
+      },
+      "constraints": ["AI must enhance, not replace, human oversight"],
+      "status": "pending",
+      "metadata": {
+        "priority": "medium",
+        "retry_limit": 2,
+        "timeout_seconds": 50
+      }
+    },
+    {
+      "task_id": "t4_policy_validation",
+      "task_type": "validation",
+      "description": "Validate workflow against compliance, security, and onboarding policies.",
+      "agent": "PolicyAgent",
+      "inputs": {
+        "from_mission": ["policy.compliance"],
+        "from_tasks": ["t2_workflow_design", "t3_ai_augmentation"],
+        "external": {}
+      },
+      "outputs": {
+        "expected": ["policy_report"],
+        "format": "json"
+      },
+      "constraints": ["must pass all mandatory checks"],
+      "status": "pending",
+      "metadata": {
+        "priority": "critical",
+        "retry_limit": 1,
+        "timeout_seconds": 40
+      }
+    },
+    {
+      "task_id": "t5_final_assembly",
+      "task_type": "generation",
+      "description": "Assemble final onboarding package with workflow, AI augmentations, and policy validation.",
+      "agent": "CommsAgent",
+      "inputs": {
+        "from_mission": ["output_spec.format"],
+        "from_tasks": ["t2_workflow_design", "t3_ai_augmentation", "t4_policy_validation"],
+        "external": {}
+      },
+      "outputs": {
+        "expected": ["final_onboarding_package"],
+        "format": "markdown"
+      },
+      "constraints": ["must be executive-ready"],
+      "status": "pending",
+      "metadata": {
+        "priority": "high",
+        "retry_limit": 2,
+        "timeout_seconds": 70
+      }
+    }
+  ],
+
+  "edges": [
+    {
+      "from": "t1_intent_analysis",
+      "to": "t2_workflow_design",
+      "relationship": "sequential",
+      "condition": {
+        "type": "success",
+        "expression": "t1.status == 'completed'"
+      }
+    },
+    {
+      "from": "t2_workflow_design",
+      "to": "t3_ai_augmentation",
+      "relationship": "sequential",
+      "condition": {
+        "type": "success",
+        "expression": "t2.status == 'completed'"
+      }
+    },
+    {
+      "from": "t2_workflow_design",
+      "to": "t4_policy_validation",
+      "relationship": "parallel",
+      "condition": {
+        "type": "success",
+        "expression": "t2.status == 'completed'"
+      }
+    },
+    {
+      "from": "t3_ai_augmentation",
+      "to": "t4_policy_validation",
+      "relationship": "sequential",
+      "condition": {
+        "type": "success",
+        "expression": "t3.status == 'completed'"
+      }
+    },
+    {
+      "from": "t4_policy_validation",
+      "to": "t5_final_assembly",
+      "relationship": "sequential",
+      "condition": {
+        "type": "success",
+        "expression": "t4.status == 'completed'"
+      }
+    }
+  ],
+
+  "graph_settings": {
+    "execution_mode": "hybrid",
+    "max_concurrency": 3,
+    "allow_dynamic_expansion": true
+  },
+
+  "loop_settings": {
+    "enable_feedback_loops": true,
+    "optimization_goal": "quality",
+    "max_iterations": 5
+  },
+
+  "audit": {
+    "created_by": "Claude5.Orchestrator",
+    "change_log": [
+      {
+        "timestamp": "2026-06-10T20:55:01Z",
+        "actor": "Claude5.Orchestrator",
+        "action": "node_added",
+        "details": { "task_id": "t1_intent_analysis" }
+      },
+      {
+        "timestamp": "2026-06-10T20:55:02Z",
+        "actor": "Claude5.Orchestrator",
+        "action": "node_added",
+        "details": { "task_id": "t2_workflow_design" }
+      }
+    ]
+  }
+}
