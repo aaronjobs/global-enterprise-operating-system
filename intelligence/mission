@@ -1,0 +1,70 @@
+{
+  "mission_id": "string",
+  "timestamp": "ISO-8601 string",
+  "requester": {
+    "actor_type": "human|agent|system",
+    "actor_id": "string",
+    "role": "string"
+  },
+  "intent": {
+    "summary": "string",
+    "problem_statement": "string",
+    "desired_outcome": "string",
+    "priority": "low|medium|high|critical",
+    "time_horizon": "immediate|short|medium|long"
+  },
+  "context": {
+    "domain": "string",
+    "constraints": [
+      "string"
+    ],
+    "assumptions": [
+      "string"
+    ],
+    "known_inputs": {
+      "structured": {},
+      "unstructured": "string"
+    }
+  },
+  "success_criteria": {
+    "quantitative": [
+      "string"
+    ],
+    "qualitative": [
+      "string"
+    ],
+    "hard_constraints": [
+      "string"
+    ]
+  },
+  "task_preferences": {
+    "decomposition_style": "sequential|parallel|hybrid",
+    "agent_routing": "auto|manual|restricted",
+    "verification_level": "none|light|strict"
+  },
+  "policy": {
+    "compliance": [
+      "string"
+    ],
+    "risk_tolerance": "low|medium|high",
+    "safety_checks_required": true
+  },
+  "output_spec": {
+    "format": "json|markdown|text|custom",
+    "deliverables": [
+      "string"
+    ],
+    "audience": "string"
+  },
+  "loop_settings": {
+    "enable_feedback_loops": true,
+    "max_iterations": 10,
+    "optimization_goal": "quality|speed|cost|balance"
+  },
+  "metadata": {
+    "tags": [
+      "string"
+    ],
+    "version": "1.0.0"
+  }
+}
