@@ -1,0 +1,75 @@
+{
+  "taskgraph_id": "string",
+  "mission_id": "string",
+  "version": "1.0.0",
+  "timestamp": "ISO-8601 string",
+
+  "nodes": [
+    {
+      "task_id": "string",
+      "task_type": "analysis|generation|execution|validation|decision",
+      "description": "string",
+      "agent": "string",
+      "inputs": {
+        "from_mission": [
+          "string"
+        ],
+        "from_tasks": [
+          "task_id"
+        ],
+        "external": {}
+      },
+      "outputs": {
+        "expected": [
+          "string"
+        ],
+        "format": "json|markdown|text|custom"
+      },
+      "constraints": [
+        "string"
+      ],
+      "status": "pending|in_progress|completed|failed",
+      "metadata": {
+        "priority": "low|medium|high|critical",
+        "retry_limit": 3,
+        "timeout_seconds": 60
+      }
+    }
+  ],
+
+  "edges": [
+    {
+      "from": "task_id",
+      "to": "task_id",
+      "relationship": "sequential|parallel|conditional",
+      "condition": {
+        "type": "success|failure|custom",
+        "expression": "string"
+      }
+    }
+  ],
+
+  "graph_settings": {
+    "execution_mode": "sequential|parallel|hybrid",
+    "max_concurrency": 5,
+    "allow_dynamic_expansion": true
+  },
+
+  "loop_settings": {
+    "enable_feedback_loops": true,
+    "optimization_goal": "quality|speed|cost|balance",
+    "max_iterations": 10
+  },
+
+  "audit": {
+    "created_by": "Claude5.Orchestrator",
+    "change_log": [
+      {
+        "timestamp": "ISO-8601 string",
+        "actor": "string",
+        "action": "node_added|node_modified|node_removed|edge_added|edge_modified|edge_removed",
+        "details": {}
+      }
+    ]
+  }
+}
