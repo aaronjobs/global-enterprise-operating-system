@@ -1,0 +1,134 @@
+{
+  "agent_name": "SlackbotAgent",
+  "version": "1.0.0",
+  "domain": "conversational_interface",
+
+  "event_handlers": {
+    "message": {
+      "description": "Handles standard Slack messages in channels or DMs.",
+      "actions": [
+        "detect_intent",
+        "extract_context",
+        "apply_routing_rules",
+        "execute_quick_action_or_escalate"
+      ],
+      "escalation_targets": {
+        "reasoning_required": "Claude5.Orchestrator",
+        "sales_related": "SalesExecutionAgent",
+        "marketing_related": "CustomerMarketingAgent",
+        "strategy_related": "SalesStrategyAgent"
+      }
+    },
+
+    "app_mention": {
+      "description": "Triggered when the bot is mentioned directly.",
+      "actions": [
+        "prioritize_message",
+        "detect_intent",
+        "collect_thread_context",
+        "route_to_orchestrator_if_mission"
+      ],
+      "escalation_targets": {
+        "default": "Claude5.Orchestrator"
+      }
+    },
+
+    "file_shared": {
+      "description": "Handles uploaded files (PDFs, docs, spreadsheets, images).",
+      "actions": [
+        "download_file_metadata",
+        "classify_file_type",
+        "extract_text_if_possible",
+        "attach_file_to_mission_context"
+      ],
+      "escalation_targets": {
+        "data_related": "DataAgent",
+        "analysis_required": "KnowledgeAgent",
+        "mission_trigger": "Claude5.Orchestrator"
+      }
+    },
+
+    "slash_command": {
+      "description": "Handles custom slash commands like /geos, /workflow, /analyze.",
+      "actions": [
+        "parse_command",
+        "extract_parameters",
+        "map_to_mission_or_quick_action",
+        "trigger_orchestrator_if_needed"
+      ],
+      "supported_commands": [
+        "/geos",
+        "/workflow",
+        "/analyze",
+        "/summarize",
+        "/followup"
+      ],
+      "escalation_targets": {
+        "mission": "Claude5.Orchestrator",
+        "quick_action": "ExecutionAgent"
+      }
+    },
+
+    "shortcut": {
+      "description": "Triggered by Slack message shortcuts (right‑click actions).",
+      "actions": [
+        "collect_message_context",
+        "normalize_text",
+        "map_shortcut_to_action",
+        "execute_or_escalate"
+      ],
+      "supported_shortcuts": [
+        "Summarize Message",
+        "Extract Action Items",
+        "Create GEOS Task"
+      ],
+      "escalation_targets": {
+        "task_creation": "ExecutionAgent",
+        "mission_creation": "Claude5.Orchestrator"
+      }
+    },
+
+    "modal_submission": {
+      "description": "Handles interactive modal submissions from Slack UI.",
+      "actions": [
+        "validate_form_inputs",
+        "convert_to_structured_payload",
+        "attach_to_mission_context",
+        "trigger_orchestrator_if_complex"
+      ],
+      "escalation_targets": {
+        "complex": "Claude5.Orchestrator",
+        "simple": "ExecutionAgent"
+      }
+    },
+
+    "reaction_added": {
+      "description": "Handles emoji reactions used as workflow triggers.",
+      "actions": [
+        "map_reaction_to_action",
+        "collect_message_context",
+        "execute_quick_action"
+      ],
+      "reaction_map": {
+        "eyes": "request_review",
+        "white_check_mark": "mark_complete",
+        "memo": "extract_action_items",
+        "speech_balloon": "summarize_thread"
+      },
+      "escalation_targets": {
+        "default": "ExecutionAgent"
+      }
+    }
+  },
+
+  "fallback_handler": {
+    "description": "If an event is not recognized, escalate to orchestrator.",
+    "target_agent": "Claude5.Orchestrator"
+  },
+
+  "metadata": {
+    "description": "Defines how SlackbotAgent handles Slack events and routes them into GEOS.",
+    "author": "GEOS System Architecture",
+    "created": "2026-06-10"
+  }
+}
