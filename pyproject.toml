@@ -1,3 +1,7 @@
+pip install --upgrade pip
+pip install -e .
+
+
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
