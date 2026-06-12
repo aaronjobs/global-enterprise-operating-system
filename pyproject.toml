@@ -2,12 +2,17 @@
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[project]
+[[project]
 name = "geos"
 version = "2.0.0"
-description = "GEOS: Global Enterprise Operating System - Production v2"
-authors = [{name = "Aaron Jobson", email = "aaron@geos.ai"}]
+description = "GEOS: Global Enterprise Operating System"
+authors = [{name = "Aaron Jobson", email = "aaron@jobson.dev"}]
 requires-python = ">=3.10"
+dependencies = [
+    # ... your other deps ...
+    "logging-json>=0.6.0",   # ← fixed here
+]
+
 
 [tool.pytest.ini_options]
 minversion = "7.4"
