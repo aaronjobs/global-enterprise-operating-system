@@ -11,6 +11,7 @@
       ],
       "primary_agent": "KnowledgeAgent",
       "fallback_agent": "Claude5.Orchestrator",
+      "model_strategy": "hydrafusion",
       "capabilities": [
         "long_context_reasoning",
         "semantic_extraction",
@@ -123,6 +124,24 @@
         "guardrail_enforcement"
       ],
       "escalation_policy": "mandatory"
+    },
+
+    {
+      "domain": "planning",
+      "primary_agent": "PlannerAgent",
+      "model_strategy": "hydrafusion"
+    },
+
+    {
+      "domain": "code",
+      "primary_agent": "CodeAgent",
+      "model_strategy": "hydrafusion"
+    },
+
+    {
+      "domain": "debug",
+      "primary_agent": "DebugAgent",
+      "model_strategy": "hydrafusion"
     }
   ],
   "default_route": {
